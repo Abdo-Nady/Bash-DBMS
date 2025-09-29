@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Create Databases folder if it doesn't exist
 mkdir -p Databases
 cd Databases
 
@@ -45,6 +46,11 @@ while true; do
                             read -p "Enter table name: " table
                             read -p "Enter columns (comma separated): " cols
                             echo "$cols" > "$table.csv"
+                            
+                            # Ask for primary key
+                            read -p "Enter primary key column number (1 to $(echo "$cols" | awk -F',' '{print NF}')): " pk_col
+                            echo "$pk_col" > ".$table.pk"
+                            echo "Table created with primary key on column $pk_col"
                             read -p "Press Enter to continue..."
                             ;;
                         2)
@@ -61,9 +67,39 @@ while true; do
                              ls *.csv 2>/dev/null
                             read -p "Enter table name: " table
                             if [ -f "$table.csv" ]; then
-                                column -t -s "," "$table.csv" // Display table structure
-                                read -p "Enter row values (comma separated): " row
+                                column -t -s "," "$table.csv"
+                                
+                                # Get number of columns from header
+                                total_cols=$(head -1 "$table.csv" | awk -F',' '{print NF}')
+                                
+                                read -p "Enter row values (comma separated, $total_cols columns): " row
+                                
+                                # Count number of columns in the input
+                                input_cols=$(echo "$row" | awk -F',' '{print NF}')
+                                
+                                # Validate column count
+                                if [ "$input_cols" -ne "$total_cols" ]; then
+                                    echo "Error: Expected $total_cols columns, but got $input_cols columns!"
+                                    read -p "Press Enter to continue..."
+                                    continue
+                                fi
+                                
+                                # Check if primary key file exists
+                                if [ -f ".$table.pk" ]; then
+                                    pk_col=$(cat ".$table.pk")
+                                    # Extract the primary key value from the new row
+                                    pk_value=$(echo "$row" | cut -d',' -f"$pk_col")
+                                    
+                                    # Check if this primary key already exists (skip header line)
+                                    if tail -n +2 "$table.csv" | cut -d',' -f"$pk_col" | grep -q "^$pk_value$"; then
+                                        echo "Error: Primary key value '$pk_value' already exists!"
+                                        read -p "Press Enter to continue..."
+                                        continue
+                                    fi
+                                fi
+                                
                                 echo "$row" >> "$table.csv"
+                                echo "Row inserted successfully!"
                             else
                                 echo "Table not found!"
                             fi
@@ -155,4 +191,5 @@ while true; do
             read -p "Press Enter to continue..."
             ;;
     esac
+    
 done
