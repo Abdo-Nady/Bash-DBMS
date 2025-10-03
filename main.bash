@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Create Databases folder if it doesn't exist
 mkdir -p Databases
 cd Databases
 
@@ -38,7 +37,8 @@ while true; do
                     echo "4) Insert into Table"
                     echo "5) Select From Table"
                     echo "6) Update Table"
-                    echo "7) Back to Main Menu"
+                    echo "7) Delete From Table"
+                    echo "8) Back to Main Menu"
                     read -p "Choose option: " db_choice
 
                     case $db_choice in
@@ -161,6 +161,28 @@ while true; do
                             read -p "Press Enter to continue..."
                             ;;
                         7)
+                            ls *.csv 2>/dev/null
+                            read -p "Enter table name: " table
+                            if [ -f "$table.csv" ]; then
+                                column -t -s "," "$table.csv"
+                                echo ""
+                            else
+                                echo "Table not found!"
+                                read -p "Press Enter to continue..."
+                                continue
+                            fi
+                            read -p "Enter row number to delete (2 to $(wc -l < "$table.csv")): " row_num
+                            # Validate row number
+                            if ! [[ "$row_num" =~ ^[0-9]+$ ]] || [ "$row_num" -lt 2 ] || [ "$row_num" -gt "$(wc -l < "$table.csv")" ]; then
+                                echo "Error: Row number out of range!"
+                                read -p "Press Enter to continue..."
+                                continue
+                            fi
+                            sed -i "${row_num}d" "$table.csv"
+                            echo "Row deleted successfully!"
+                            read -p "Press Enter to continue..."
+                            ;;
+                        8)
                             cd ..
                             break
                             ;;
