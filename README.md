@@ -57,7 +57,3 @@ id   name   age
 ## Author
 
 Built by **Nady** for educational purposes.
-
----
-
-تحب أزود في النسخة دي **شرح سريع للأوامر المتاحة في المنيو** ولا تفضل تخليها كدا قصيرة وخفيفة؟
